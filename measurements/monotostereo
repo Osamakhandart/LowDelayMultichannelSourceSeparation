@@ -1,0 +1,50 @@
+import numpy as np
+import soundfile as sf
+import os
+
+def merge_wav_to_stereo(left_wav, right_wav, output_wav):
+    """
+    Merge two mono WAV files into a stereo WAV file.
+
+    Parameters:
+        left_wav (str): Full path to the WAV file for the left channel.
+        right_wav (str): Full path to the WAV file for the right channel.
+        output_wav (str): Full path to save the output stereo WAV file.
+    """
+
+    # Check if files exist
+    if not os.path.exists(left_wav):
+        raise FileNotFoundError(f"❌ Left channel file not found: {left_wav}")
+    if not os.path.exists(right_wav):
+        raise FileNotFoundError(f"❌ Right channel file not found: {right_wav}")
+
+    # Load audio files
+    left_audio, sr_left = sf.read(left_wav)
+    right_audio, sr_right = sf.read(right_wav)
+
+    # Ensure both have the same sample rate
+    if sr_left != sr_right:
+        raise ValueError("❌ Sample rates do not match! Ensure both WAV files have the same sample rate.")
+
+    # Ensure both files are mono
+    if len(left_audio.shape) > 1 or len(right_audio.shape) > 1:
+        raise ValueError("❌ Input files must be mono (single channel audio).")
+
+    # Match lengths: Pad shorter file with silence
+    max_length = max(len(left_audio), len(right_audio))
+    left_audio = np.pad(left_audio, (0, max_length - len(left_audio)), 'constant')
+    right_audio = np.pad(right_audio, (0, max_length - len(right_audio)), 'constant')
+
+    # Merge into stereo (Left Channel, Right Channel)
+    stereo_audio = np.column_stack((left_audio, right_audio))
+
+    # Save as stereo WAV file
+    sf.write(output_wav, stereo_audio, sr_left)
+    print(f"✅ Merged stereo file saved as: {output_wav}")
+
+# Example usage with full paths
+left_wav_path = "/home/ZA/Music/Media project/BSS_MP/BSS_MP/measurements/Audio Dataset/drums.wav"
+right_wav_path = "/home/ZA/Music/Media project/BSS_MP/BSS_MP/measurements/Audio Dataset/mspeech.wav"
+output_stereo_path = "/home/ZA/Music/Media_Project/BSS_MP/BSS_MP/measurements/Audio_Files/stereo_output.wav"
+
+merge_wav_to_stereo(left_wav_path, right_wav_path, output_stereo_path)
