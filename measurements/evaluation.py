@@ -184,8 +184,6 @@ plt.close()
 print(f"📈 Overall SNR graph saved as {output_graph_path}")
 print("🎉 SNR calculation and overall graph plotting complete!")
 
-
-
 fig, axs = plt.subplots(2, 2, figsize=(10, 10))  # Adjust size as needed
 
 # Plot 1: Correlation

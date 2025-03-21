@@ -1,110 +1,85 @@
-# play_and_record_rir.py
 import numpy as np
-import sounddevice as sd
-from scipy.io.wavfile import read, write
-import threading
+from scipy.io.wavfile import write
 import matplotlib.pyplot as plt
+import os
 
-
-# Load the sine sweep and inverse sweep from the WAV files
-sine_sweep_sample_rate, sine_sweep = read("sine_sweep.wav")
-inverse_sweep_sample_rate, inverse_sweep = read("inverse_sweep.wav")
-
-# Ensure the sample rates match
-assert sine_sweep_sample_rate == inverse_sweep_sample_rate, "Sample rates of the sweeps must match!"
-sample_rate = sine_sweep_sample_rate
-
-# Normalize the sweeps (WAV files are loaded as integers, so convert to float)
-sine_sweep = sine_sweep.astype(np.float32) / 32767.0
-inverse_sweep = inverse_sweep.astype(np.float32) / 32767.0
-
-# Play the sine sweep through both speakers (left and right channels)
-stereo_output_sine_sineInverse = np.column_stack((sine_sweep, inverse_sweep)) 
-stereo_output_sin= np.column_stack((sine_sweep, sine_sweep))  
-stereo_output_inverse = np.column_stack((inverse_sweep, inverse_sweep))  
-rec_duration=10
-
-
-# Function to play the both sweep
-def playBoth():
-    print("🔊 Playing sine sweep on Left & inverse sine sweep on Right speaker...")
-    sd.play(stereo_output_sine_sineInverse, samplerate=sample_rate)
-    sd.wait()
-
-
-
-
-# Function to play the sin sweep
-def play_sweep_on_both_speaker():
-    print("🔊 Playing inverse sweep through both speakers...")
-    sd.play(stereo_output_sin, samplerate=sample_rate)
-    sd.wait()
-
-
-
-# Function to play the inverse sweep
-def play_inverse_sweep_on_both_speaker():
-    print("🔊 Playing inverse sweep through both speakers...")
-    sd.play(stereo_output_inverse, samplerate=sample_rate)
-    sd.wait()
-
-
-
-
-# Function to record the RIR
-def record_rir():
-    print("🎤 Recording RIR...")
-    print(sd.query_devices())
-    recording = sd.rec(int(sample_rate * rec_duration), samplerate=sample_rate, channels=2, dtype=np.float32)
-    sd.wait()
-    print("✅ Recording complete!")
+def generate_sine_sweep(duration, sample_rate, f0, f1):
+    """
+    Generate a sine sweep (chirp) signal.
     
-    # Save the recorded RIR as a WAV file
-    rir_filename = "rir_recording_both_speakers.wav"
-    write(rir_filename, sample_rate, (recording * 32767).astype(np.int16))  # Convert to 16-bit PCM
-    print(f"💾 RIR saved as {rir_filename}")
-    plot_recorded_rir(recording, sample_rate)
+    Parameters:
+        duration (float): Duration of the sweep in seconds.
+        sample_rate (int): Sampling rate in Hz.
+        f0 (float): Start frequency of the sweep in Hz.
+        f1 (float): End frequency of the sweep in Hz.
+    
+    Returns:
+        sweep (np.array): Sine sweep signal.
+        t (np.array): Time axis.
+    """
+    t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
+    phase = 2 * np.pi * f0 * duration / np.log(f1 / f0) * (np.exp(t * np.log(f1 / f0) / duration) - 1)
+    sweep = np.sin(phase)
+    return sweep, t
 
+# Parameters for the sine sweep
+duration = 1.5      # Duration of the sweep in seconds
+sample_rate = 44100 # Sampling rate in Hz
+f0 = 20             # Start frequency in Hz
+f1 = 20000          # End frequency in Hz
 
+# Generate the sine sweep
+sine_sweep, time_axis = generate_sine_sweep(duration, sample_rate, f0, f1)
 
+# Normalize the sweep to prevent clipping
+sine_sweep = sine_sweep / np.max(np.abs(sine_sweep))
 
-def plot_recorded_rir(recording, sample_rate):
-    time = np.linspace(0, rec_duration, num=recording.shape[0])
+# Generate the inverse sweep (time-reversed version of the sweep)
+inverse_sweep = sine_sweep[::-1]  # Reverse the array
 
-    plt.figure(figsize=(10, 6))
+# Directory to save the files
+save_dir = "/home/ZA/Music/Media project/BSS_MP/BSS_self/LowDelayMultichannelSourceSeparation/measurements/measured_data"
 
-    # Plot Channel 1 (Left Speaker)
-    plt.subplot(2, 1, 1)
-    plt.plot(time, recording[:, 0], color='b', label="Left Channel (Speaker 1)")
-    plt.xlabel("Time [s]")
-    plt.ylabel("Amplitude")
-    plt.title("Waveform of Left Channel")
-    plt.legend()
-    plt.grid()
+# Ensure directory exists
+os.makedirs(save_dir, exist_ok=True)
 
-    # Plot Channel 2 (Right Speaker)
-    plt.subplot(2, 1, 2)
-    plt.plot(time, recording[:, 1], color='r', label="Right Channel (Speaker 2)")
-    plt.xlabel("Time [s]")
-    plt.ylabel("Amplitude")
-    plt.title("Waveform of Right Channel")
-    plt.legend()
-    plt.grid()
+# File paths
+sine_sweep_filename = os.path.join(save_dir, "sine_sweep.wav")
+inverse_sweep_filename = os.path.join(save_dir, "inverse_sweep.wav")
+sine_sweep_plot_filename = os.path.join(save_dir, "sine_sweep_plot.png")
+inverse_sweep_plot_filename = os.path.join(save_dir, "inverse_sweep_plot.png")
 
-    plt.tight_layout()
-    plt.show()
+# Save the sine sweep as a WAV file (16-bit PCM)
+write(sine_sweep_filename, sample_rate, (sine_sweep * 32767).astype(np.int16))
+print(f"✅ Sine sweep saved at: {sine_sweep_filename}")
 
+# Save the inverse sine sweep as a WAV file (16-bit PCM)
+write(inverse_sweep_filename, sample_rate, (inverse_sweep * 32767).astype(np.int16))
+print(f"✅ Inverse sine sweep saved at: {inverse_sweep_filename}")
 
+# Plot and save the sine sweep waveform
+plt.figure(figsize=(14, 5))
+plt.plot(time_axis, sine_sweep)
+plt.title('Sine Sweep Waveform')
+plt.xlabel('Time (seconds)')
+plt.ylabel('Amplitude')
+plt.grid(True)
+plt.tight_layout()
+plt.savefig(sine_sweep_plot_filename)
+plt.close()
+print(f"✅ Sine sweep plot saved at: {sine_sweep_plot_filename}")
 
+# Plot and save the inverse sine sweep waveform
+plt.figure(figsize=(14, 5))
+plt.plot(time_axis, inverse_sweep)
+plt.title('Inverse Sine Sweep Waveform')
+plt.xlabel('Time (seconds)')
+plt.ylabel('Amplitude')
+plt.grid(True)
+plt.tight_layout()
+plt.savefig(inverse_sweep_plot_filename)
+plt.close()
+print(f"✅ Inverse sine sweep plot saved at: {inverse_sweep_plot_filename}")
 
-
-#play_thread = threading.Thread(target=playBoth)  # Change to play_inverse_sweep for the inverse sweep
-play_thread = threading.Thread(target=play_sweep_on_both_speaker)
-# play_thread = threading.Thread(target=play_inverse_sweep_on_both_speaker)
-record_thread = threading.Thread(target=record_rir)
-
-play_thread.start()
-record_thread.start()
-
-play_thread.join()
-record_thread.join()
+# OPTIONAL: Uncomment if you want to display the plots interactively
+# plt.show()

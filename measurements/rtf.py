@@ -81,7 +81,7 @@ if __name__ == "__main__":
     # stereo_audio = generate_test_stereo_audio(sample_rate, duration)
 
         # Load real stereo audio and RIR
-    sample_rate, stereo_audio = load_stereo_audio('real_stereo_audio.wav',target_sr=48000)
+    sample_rate, stereo_audio = load_stereo_audio('/home/ZA/Music/Media project/BSS_MP/BSS_self/LowDelayMultichannelSourceSeparation/measurements/trimmed_data_final_eval/4/tda_audio4_1.wav',target_sr=48000)
     sample_rate_rir, rir = load_rir('real_rir.wav',target_sr=48000)
 
 
