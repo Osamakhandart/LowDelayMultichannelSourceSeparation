@@ -1,0 +1,25 @@
+current mc hight 1.247
+It looks like Mic 1 has higher energy (blue) compared to Mic 2 (orange).
+
+
+mic 1 - 2 height:  1.39
+---- assumed as left speaker
+dis (mic at left: 1.45)
+dis (mic at right: 1.47) from speaker
+----
+speak h - 0.97 *(for left)
+
+----
+focus both mic vol level 20%
+focusrite speaker level - 30
+
+--
+system mic level 60
+sys speaker 100
+
+-- assumed as right speaker
+distance from speaker2 at right -
+speaker height same as before
+distance from mic at left 2.3
+distance from mic at right 1.5
+
