@@ -111,9 +111,9 @@ def play_and_record_rir(sweep_file, inverse_sweep_file, save_dir, speaker_channe
 sweep_file_path = "/home/ZA/Music/Media project/BSS_MP/BSS_self/LowDelayMultichannelSourceSeparation/measurements/measured_data/sweeps/sine_sweep.wav"
 inverse_sweep_file_path = "/home/ZA/Music/Media project/BSS_MP/BSS_self/LowDelayMultichannelSourceSeparation/measurements/measured_data/sweeps/inverse_sweep.wav"
 
-save_rir_directory = "/home/ZA/Music/Media project/BSS_MP/BSS_self/LowDelayMultichannelSourceSeparation/measurements/measured_data/RIRrecordings/ls01 - right/"
+save_rir_directory = "/home/ZA/Music/Media project/BSS_MP/BSS_self/LowDelayMultichannelSourceSeparation/measurements/measured_data/RIRrecordings/ls01mic100/"
 
-speaker_channel = 'right'  # Run once for 'left', then 'right' separately
+speaker_channel = 'left'  # Run once for 'left', then 'right' separately
 sample_rate = 48000
 
 play_and_record_rir(

@@ -14,7 +14,7 @@ focus both mic vol level 20%
 focusrite speaker level - 30
 
 --
-system mic level 60
+system mic level 61
 sys speaker 100
 
 -- assumed as right speaker
@@ -22,4 +22,19 @@ distance from speaker2 at right -
 speaker height same as before
 distance from mic at left 2.3
 distance from mic at right 1.5
+
+
+
+---- new measurments
+
+distance between mics: 0.056m
+left mic height current = 1.24
+right, when you face themics: 1.22
+dis from mic 1 adn 2 from right speaker as left01: 1.3
+dis from mic 1 and 2 from left speaker: 1.45mic1onright as left02, 1.41mic2 left
+
+currently recording for right side speaker: H: 1.42
+
+later increasde the speaker mic vol to 99
+
 
