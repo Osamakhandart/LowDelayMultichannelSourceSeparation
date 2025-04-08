@@ -5,14 +5,11 @@ import matplotlib.pyplot as plt
 import soundfile as sf
 
 # Load the SOFA file
-sofa = SOFAFile('/Users/usamakhan/Documents/project/LowDelayMultichannelSourceSeparation/measurements/sofa/HL_-0.25X_0.0Y.sofa', 'r')
-
-
+sofa = SOFAFile('/home/ZA/Music/Media project/BSS_MP/BSS_self/LowDelayMultichannelSourceSeparation/measurements/sofa/HL_-0.25X_0.0Y.sofa', 'r')
 
 # Extract RIRs
 rir1 = sofa.getDataIR()[0, 0, :]  # RIR from the first speaker to the first microphone
 rir2 = sofa.getDataIR()[0, 1, :]  # RIR from the first speaker to the second microphone
-
 
 
  #Preprocess the signals
@@ -62,8 +59,6 @@ recovered_signal = scipy.signal.convolve(rir2, h12_inv_time, mode='same')
 
 
 
-
-
 plt.figure(figsize=(12, 6))
 plt.subplot(2, 1, 1)
 plt.plot(frequency_axis, magnitude)
@@ -82,6 +77,8 @@ plt.show()
 
 plt.figure(figsize=(12, 6))
 plt.plot(rir1, label='Original Signal at Mic 1', alpha=0.7)
+plt.plot(rir2, label='Original Signal at Mic 2', alpha=0.7)
+plt.axvline(x=time_delay, color='r', linestyle='--', label='Estimated Delay')
 plt.plot(recovered_signal, label='Recovered Signal', linestyle='--')
 plt.title('Comparison of Original and Recovered Signals')
 plt.xlabel('Sample Number')

@@ -92,7 +92,7 @@ import matplotlib.pyplot as plt
 import threading
 
 # Custom output directory
-output_dir = "/home/ZA/Music/Media project/BSS_MP/BSS_self/LowDelayMultichannelSourceSeparation/measurements/stereoautomated_script_outputs"
+output_dir = "/home/ZA/Music/Media project/BSS_MP/BSS_self/LowDelayMultichannelSourceSeparation/measurements/new/stereoautomated_script_outputs"
 
 # Function to load audio
 def load_audio(file_path, target_sr):
@@ -121,7 +121,7 @@ def save_and_plot_recorded_audio(recording, duration, target_sr, index):
     os.makedirs(rir_output_dir, exist_ok=True)
 
     # Construct the filename with incrementing index
-    recorded_filename = os.path.join(rir_output_dir, f"rir_output_{index}.wav")
+    recorded_filename = os.path.join(rir_output_dir, f"stereo_output_{index}.wav")
     
     # Convert and save as 16-bit PCM WAV file
     sf.write(recorded_filename, (recording * 32767).astype(np.int16), target_sr)

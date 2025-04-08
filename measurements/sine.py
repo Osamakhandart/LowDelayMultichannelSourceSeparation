@@ -58,7 +58,7 @@ fs = 48000              # Sampling rate in Hz
 duration = 1.6          # Duration in seconds
 peak = 1           # Peak amplitude
 
-save_dir = "/home/ZA/Music/Media project/BSS_MP/BSS_self/LowDelayMultichannelSourceSeparation/measurements/measured_data/sweeps/"
+save_dir = "/home/ZA/Music/Media project/BSS_MP/BSS_self/LowDelayMultichannelSourceSeparation/measurements/new/sweeps/"
 os.makedirs(save_dir, exist_ok=True)
 
 sinsw = sineSweep(f1, f2, duration, fs, peak)
