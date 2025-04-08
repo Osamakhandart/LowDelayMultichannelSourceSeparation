@@ -41,9 +41,6 @@ else:
 # Then calculate the FFT of the padded RIR
 H_S2_M1 = np.fft.fft(padded_rir2_mic1)
 
-
-
-
 # Length of the recorded signal from Microphone 1
 signal_length_X1 = len(mic1_audio)
 

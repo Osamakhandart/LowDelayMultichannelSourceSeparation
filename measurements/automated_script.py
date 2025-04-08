@@ -92,7 +92,7 @@ import matplotlib.pyplot as plt
 import threading
 
 # Custom output directory
-output_dir = "/home/ZA/Music/Media project/BSS_MP/BSS_self/LowDelayMultichannelSourceSeparation/measurements/automated_script_outputs"
+output_dir = "/home/ZA/Music/Media project/BSS_MP/BSS_self/LowDelayMultichannelSourceSeparation/measurements/stereoautomated_script_outputs"
 
 # Function to load audio
 def load_audio(file_path, target_sr):

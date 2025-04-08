@@ -1,6 +1,3 @@
-
-from pysofaconventions import SOFAFile
-
 import numpy as np
 import scipy.signal
 import soundfile as sf
@@ -10,8 +7,6 @@ import matplotlib.pyplot as plt
 rir_speaker1, fs = sf.read('/Users/usamakhan/Documents/project/LowDelayMultichannelSourceSeparation/measurements/measured_data/RIRrecordings/ls01-left01mic60/RIR_LEFT_NORM_FLOAT.wav')  # RIR when playing from Speaker 1
 rir_speaker2, fs = sf.read('/Users/usamakhan/Documents/project/LowDelayMultichannelSourceSeparation/measurements/measured_data/RIRrecordings/ls02-left02mic60/RIR_LEFT_NORM_FLOAT.wav')  # RIR when playing from Speaker 2
 stereo_audio, fs = sf.read('/Users/usamakhan/Documents/project/LowDelayMultichannelSourceSeparation/measurements/trimmed_data_final_eval/4/tda_audio4_1.wav')
-
-
 
 #Step 2: Separate channels for each RIR
 rir1_mic1 = rir_speaker1[:, 0]
