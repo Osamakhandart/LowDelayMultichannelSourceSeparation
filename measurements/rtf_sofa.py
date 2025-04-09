@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import soundfile as sf
 
 # Load the SOFA file
-sofa = SOFAFile('/home/ZA/Music/Media project/BSS_MP/BSS_self/LowDelayMultichannelSourceSeparation/measurements/sofa/HL_-0.25X_0.0Y.sofa', 'r')
+sofa = SOFAFile('/Users/usamakhan/Documents/project/LowDelayMultichannelSourceSeparation/measurements/sofa/HL_-0.25X_0.0Y.sofa', 'r')
 
 # Extract RIRs
 rir1 = sofa.getDataIR()[0, 0, :]  # RIR from the first speaker to the first microphone
