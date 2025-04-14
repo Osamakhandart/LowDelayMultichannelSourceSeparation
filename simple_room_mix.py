@@ -185,10 +185,10 @@ def room_mix(files, micsetup='stereo', plot=False, rt60=0.2):
 
 
 if __name__ == "__main__":
-   # files=('pinkish16.wav', 'espeakwav_16.wav')
-   files = ('espeakfemale_16.wav', 'espeakwav_16.wav')
+   files=('pinkish16.wav', 'espeakwav_16.wav')
+   #files = ('espeakfemale_16.wav', 'espeakwav_16.wav')
    # room_mix(files, micsetup='cube', plot=True)
-   room_mix(files, micsetup='stereo', plot=True, rt60=0.4)
+   room_mix(files, micsetup='stereo', plot=True, rt60=0.1)
    
    
    """
