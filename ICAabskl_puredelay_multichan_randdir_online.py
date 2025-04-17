@@ -4,11 +4,70 @@
 #with a Laplacian for the equality of input power and output power.
 #Using the optimization of random directions in an online fasshion, in parallel in the beginning
 #Gerald Schuller, July 2020
+# from IPython.display import Audio, display
 
 import numpy as np
 import scipy.signal
 import scipy.stats as stats
 
+
+
+def compute_rtf(x1, x2, n_fft=4096):
+    X1 = np.fft.fft(x1, n=n_fft)
+    X2 = np.fft.fft(x2, n=n_fft)
+    return X2 / (X1 + 1e-10)
+
+def extract_delay_and_attenuation(rtf, fs, n_fft):
+    # Work only with the positive frequencies
+    freq = np.fft.fftfreq(n_fft, d=1/fs)[:n_fft//2]
+    rtf_half = rtf[:n_fft//2]
+    mag = np.abs(rtf_half)
+    phase = np.angle(rtf_half)
+    phase_unwrapped = np.unwrap(phase)
+    # Fit phase vs. frequency: phase ≈ -2πτ * f + constant
+    p = np.polyfit(freq, phase_unwrapped, 1)
+    slope = p[0]
+    tau = -slope / (2 * np.pi)
+    attenuation = np.mean(mag)
+    return tau, attenuation
+
+
+def rtf_initialization(X, fs, chanout=2, n_fft=4096, ref_channels=[0,1]):
+    """
+    Compute initial unmixing coefficients using RTF estimates.
+    
+    Parameters:
+      X         : Input multi-channel signal, with shape (n_samples, N).
+      fs        : Sampling rate.
+      chanout   : Number of output channels (e.g., 2).
+      n_fft     : Number of FFT points.
+      ref_channels : List of reference channel indices for each output.
+                     Should have length equal to chanout.
+                     
+    Returns:
+      coeffs    : 2D numpy array of shape (N * chanout, 2), where for each output
+                  channel and each input channel we have [attenuation, delay].
+    """
+    N = X.shape[1]  # number of input channels
+    coeffs = np.zeros((N * chanout, 2))
+    
+    # For each output channel, use its designated reference channel.
+    for j in range(chanout):
+        ref = ref_channels[j]
+        for i in range(N):
+            # For the reference channel itself, set delay 0 and gain 1.
+            if i == ref:
+                tau = 0.0
+                att = 1.0
+            else:
+                x_ref = X[:, ref]
+                x_i = X[:, i]
+                rtf = compute_rtf(x_ref, x_i, n_fft)
+                tau, att = extract_delay_and_attenuation(rtf, fs, n_fft)
+            # Place the coefficient in the j-th output block.
+            coeffs[j * N + i, 0] = att
+            coeffs[j * N + i, 1] = tau
+    return coeffs
 def playsound(audio, samplingRate, channels):
     #funtion to play back an audio signal, in array "audio"
     import pyaudio
@@ -272,62 +331,6 @@ def freqresp(coeffs, chanin, chanout):
    plt.show()
    """
    return unflatness
-def compute_rtf(x1, x2, n_fft=4096):
-    X1 = np.fft.fft(x1, n=n_fft)
-    X2 = np.fft.fft(x2, n=n_fft)
-    return X2 / (X1 + 1e-10)
-
-def extract_delay_and_attenuation(rtf, fs, n_fft):
-    # Work only with the positive frequencies
-    freq = np.fft.fftfreq(n_fft, d=1/fs)[:n_fft//2]
-    rtf_half = rtf[:n_fft//2]
-    mag = np.abs(rtf_half)
-    phase = np.angle(rtf_half)
-    phase_unwrapped = np.unwrap(phase)
-    # Fit phase vs. frequency: phase ≈ -2πτ * f + constant
-    p = np.polyfit(freq, phase_unwrapped, 1)
-    slope = p[0]
-    tau = -slope / (2 * np.pi)
-    attenuation = np.mean(mag)
-    return tau, attenuation
-
-
-def rtf_initialization(X, fs, chanout=2, n_fft=4096, ref_channels=[0,1]):
-    """
-    Compute initial unmixing coefficients using RTF estimates.
-    
-    Parameters:
-      X         : Input multi-channel signal, with shape (n_samples, N).
-      fs        : Sampling rate.
-      chanout   : Number of output channels (e.g., 2).
-      n_fft     : Number of FFT points.
-      ref_channels : List of reference channel indices for each output.
-                     Should have length equal to chanout.
-                     
-    Returns:
-      coeffs    : 2D numpy array of shape (N * chanout, 2), where for each output
-                  channel and each input channel we have [attenuation, delay].
-    """
-    N = X.shape[1]  # number of input channels
-    coeffs = np.zeros((N * chanout, 2))
-    
-    # For each output channel, use its designated reference channel.
-    for j in range(chanout):
-        ref = ref_channels[j]
-        for i in range(N):
-            # For the reference channel itself, set delay 0 and gain 1.
-            if i == ref:
-                tau = 0.0
-                att = 1.0
-            else:
-                x_ref = X[:, ref]
-                x_i = X[:, i]
-                rtf = compute_rtf(x_ref, x_i, n_fft)
-                tau, att = extract_delay_and_attenuation(rtf, fs, n_fft)
-            # Place the coefficient in the j-th output block.
-            coeffs[j * N + i, 0] = att
-            coeffs[j * N + i, 1] = tau
-    return coeffs
 
 def separation_randdir(mixfile, plot=True):
 #Separates 2 audio sources from the multichannel mix in the mixfile,
@@ -381,21 +384,21 @@ def separation_randdir(mixfile, plot=True):
    blockno=0
    
    starttime=time.time()
-   # for ob in range(1): #sub-periods after which to run the optimization, outer blocks, seems best for 1 outer block.
-   #    #Accumulate part of the signal in a signal "accumulator" of size "blocksize" (8000 samples, or 0.5s):
-   #    for i in range(min(blocks,16)): #accumulate audio blocks over about 3 seconds:
-   #       blockaccumulator=0.98*blockaccumulator + 0.02*X[blockno*blocksize+np.arange(blocksize)]
-   #       blockno+=1
-   #    #optimize the unmixing coefficients "coeffs":
-   #    coeffs= optimrandomdir.optimrandomdir(objfunc, coeffs, args=(blockaccumulator,chanout), coeffdeviation=coeffdeviation, iterations=1000, startingscale=4.0, endscale=0.0)
-   # #coeffs= optimrandomdir.optimrandomdir(objfunc, coeffs, args=(X,chanout), coeffdeviation=coeffdeviation, iterations=400, startingscale=4.0, endscale=0.0) #startingscale=4 might be useful for finding the right delay, the endscale=0.1 for the right attenuations, and it stays flexible at that point.
-   # #coeffs = GLD_fast.gldfast(objfunc, coeffs, args=(X,chanout), iterations=150, startingscale=4)
-   # """
-   # coeffs1d = opt.minimize(wrapperfunc, coeffs , args=(X,chanout), method='CG',options={'disp':True, 'maxiter': 10})
-   # coeffs1d=coeffs1d.x
-   # print("coeffs1d=", coeffs1d)
-   # coeffs=np.reshape(coeffs1d,(-1,2))
-   # """
+   for ob in range(1): #sub-periods after which to run the optimization, outer blocks, seems best for 1 outer block.
+      #Accumulate part of the signal in a signal "accumulator" of size "blocksize" (8000 samples, or 0.5s):
+      for i in range(min(blocks,16)): #accumulate audio blocks over about 3 seconds:
+         blockaccumulator=0.98*blockaccumulator + 0.02*X[blockno*blocksize+np.arange(blocksize)]
+         blockno+=1
+      #optimize the unmixing coefficients "coeffs":
+      coeffs= optimrandomdir.optimrandomdir(objfunc, coeffs, args=(blockaccumulator,chanout), coeffdeviation=coeffdeviation, iterations=1000, startingscale=4.0, endscale=0.0)
+   #coeffs= optimrandomdir.optimrandomdir(objfunc, coeffs, args=(X,chanout), coeffdeviation=coeffdeviation, iterations=400, startingscale=4.0, endscale=0.0) #startingscale=4 might be useful for finding the right delay, the endscale=0.1 for the right attenuations, and it stays flexible at that point.
+   #coeffs = GLD_fast.gldfast(objfunc, coeffs, args=(X,chanout), iterations=150, startingscale=4)
+   """
+   coeffs1d = opt.minimize(wrapperfunc, coeffs , args=(X,chanout), method='CG',options={'disp':True, 'maxiter': 10})
+   coeffs1d=coeffs1d.x
+   print("coeffs1d=", coeffs1d)
+   coeffs=np.reshape(coeffs1d,(-1,2))
+   """
    endtime=time.time()
    processingtime=endtime-starttime
    print("Duration of optimization:", endtime-starttime, "sec.")
@@ -409,13 +412,14 @@ def separation_randdir(mixfile, plot=True):
    #starttime=time.time()
    X_sep  =unmixing(coeffs, X, chanout)
    #endtime=time.time()
+   wav.write("with_rtf.wav",samplerate,np.int16(np.clip(X_sep*2**15,-2**15,2**15-1)))
 
-   wav.write("sepchan_randdir_online.wav",samplerate,np.int16(np.clip(X_sep*2**15,-2**15,2**15-1)))
+   #wav.write("sepchan_randdir_online.wav.wav",samplerate,np.int16(np.clip(X_sep*2**15,-2**15,2**15-1)))
    print("Written to sepchan_randdir_online.wav")
    if plot==True:
       plt.plot(X_sep[:,0])
       plt.plot(X_sep[:,1])
-      plt.title('The unmixed channels')
+      plt.title('The unmixed channels Random BASED')
       plt.show()
       
    return processingtime, X_sep
@@ -466,10 +470,10 @@ if __name__ == '__main__':
    #samplerate, X = wav.read("/home/schuller/Documents/ConfJournalsVortr3/2021-11Asilomar/SourcesSoftware/mix16000cubefantasy.wav")
    #samplerate, X = wav.read("/home/schuller/Documents/ConfJournalsVortr3/2021-11Asilomar/SourcesSoftware/mix16000cubenoise.wav")
    
-   mixfile="/Users/usamakhan/Documents/project/LowDelayMultichannelSourceSeparation/mix16000.wav"
+   mixfile="/Users/usamakhan/Documents/project/LowDelayMultichannelSourceSeparation/measurements/trimmed_data_final_eval/3/tda_audio3_1.wav"
    #Unmixing:
    processingtime, X_sep= separation_randdir(mixfile, plot=True)
-   
+  
    print("Duration of unmixing:", processingtime, "sec.")
    X_sep=X_sep*1.0/np.max(abs(X_sep))
    chanout=X_sep.shape[1] #2 output channels
@@ -477,10 +481,10 @@ if __name__ == '__main__':
    for c in range(chanout):
       os.system('espeak -s 120 "Separated Channel'+str(c)+' " ')
       playsound(X_sep[:,c]*2**15, samplerate, 1)
+     
       
    """
    from mir_eval.separation import bss_eval_sources
    sdr, sir, sar, perm = bss_eval_sources(ref[:,:m], y[:,:m])
    """
    
-

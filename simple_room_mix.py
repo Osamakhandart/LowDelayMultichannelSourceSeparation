@@ -43,7 +43,7 @@ fs , audio1 = wavfile.read('SI889_48000.wav')
 """
 
 
-def room_mix(files, micsetup='stereo', plot=False, rt60=0.2):
+def room_mix(files, micsetup='stereo', plot=False, rt60=0.1):
    # Files: List of files with the audio sources
    # plot=True: Room setup is plotted
    # micsetup='cube' #'square' 'stereo' : possible microphone setups
